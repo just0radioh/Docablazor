@@ -1,0 +1,120 @@
+@namespace DocaBlazor.Shared
+
+<div class="docs-landing">
+    @if (!string.IsNullOrEmpty(Subtitle))
+    {
+        <p class="docs-landing-intro">@Subtitle</p>
+    }
+
+    <div class="docs-landing-stats" aria-label="Resumo da documentação">
+        <div class="dash-stat tone-indigo">
+            <span class="dash-stat-label">Seções</span>
+            <span class="dash-stat-value">@Sections.Count</span>
+            <span class="dash-stat-hint">blocos nesta view</span>
+        </div>
+        <div class="dash-stat tone-orange">
+            <span class="dash-stat-label">Documentos</span>
+            <span class="dash-stat-value">@TotalDocs</span>
+            <span class="dash-stat-hint">páginas no total</span>
+        </div>
+        <div class="dash-stat tone-blue">
+            <span class="dash-stat-label">Pastas</span>
+            <span class="dash-stat-value">@TotalFolders</span>
+            <span class="dash-stat-hint">categorias / grupos</span>
+        </div>
+        <div class="dash-stat tone-pink">
+            <span class="dash-stat-label">Pendentes</span>
+            <span class="dash-stat-value">@PendingCount</span>
+            <span class="dash-stat-hint">ainda em prep</span>
+        </div>
+    </div>
+
+    <div class="docs-landing-grid">
+        @foreach (var section in Sections)
+        {
+            <section class="docs-landing-col">
+                <h2 class="docs-landing-col-title">
+                    <button type="button" @onclick="() => OnSelect.InvokeAsync(section)">
+                        @if (!string.IsNullOrEmpty(section.Icon))
+                        {
+                            <span>@section.Icon</span>
+                        }
+                        @section.Label
+                    </button>
+                </h2>
+                <p class="docs-landing-col-desc">@Describe(section)</p>
+                <ul class="docs-landing-links">
+                    @if (section.Children is { Count: > 0 })
+                    {
+                        @foreach (var child in section.Children)
+                        {
+                            <LandingLink Node="child" OnSelect="OnSelect" />
+                        }
+                    }
+                    else
+                    {
+                        <li class="docs-landing-empty">Nenhum item ainda</li>
+                    }
+                </ul>
+            </section>
+        }
+    </div>
+
+    @if (Sections.Count > 1)
+    {
+        <nav class="docs-landing-toc" aria-label="Nesta página">
+            <h3>Nesta página</h3>
+            <ul>
+                @foreach (var section in Sections)
+                {
+                    <li>
+                        <button type="button" @onclick="() => OnSelect.InvokeAsync(section)">@section.Label</button>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<NavNode> Sections { get; set; } = new();
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public EventCallback<NavNode> OnSelect { get; set; }
+
+    private int TotalDocs => Sections.Sum(CountLeaves);
+    private int TotalFolders => Sections.Sum(CountFolders);
+    private int PendingCount => Sections.Sum(CountPending);
+
+    private static string Describe(NavNode section)
+    {
+        if (section.Pending) return "Conteúdo em preparação.";
+        var count = CountLeaves(section);
+        if (count == 0) return "Pasta vazia — adicione páginas pelo menu.";
+        if (count == 1) return "1 documento.";
+        return $"{count} documentos.";
+    }
+
+    private static int CountLeaves(NavNode node)
+    {
+        if (node.IsPage) return 1;
+        if (node.Children is null || node.Children.Count == 0) return 0;
+        return node.Children.Sum(CountLeaves);
+    }
+
+    private static bool CountsAsFolder(NavNode node) =>
+        node.IsFolder && !(node.Id ?? string.Empty).StartsWith("__", StringComparison.Ordinal);
+
+    private static int CountFolders(NavNode node)
+    {
+        var n = CountsAsFolder(node) ? 1 : 0;
+        if (node.Children is null) return n;
+        return n + node.Children.Sum(CountFolders);
+    }
+
+    private static int CountPending(NavNode node)
+    {
+        var n = node.Pending ? 1 : 0;
+        if (node.Children is null) return n;
+        return n + node.Children.Sum(CountPending);
+    }
+}

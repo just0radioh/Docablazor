@@ -1,8 +1,0 @@
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\rpswa.dswa.cache.json
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.AssemblyInfoInputs.cache
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.AssemblyInfo.cs
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.csproj.CoreCompileInputs.cache
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.RazorAssemblyInfo.cache
-C:\Users\gustavo.lopes\Desktop\2\DocaBlazor\DocaBlazor\obj\Debug\net8.0\DocaBlazor.RazorAssemblyInfo.cs

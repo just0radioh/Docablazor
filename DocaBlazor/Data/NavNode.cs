@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace DocaBlazor.Data;
 
 /// <summary>
@@ -6,22 +8,30 @@ namespace DocaBlazor.Data;
 /// </summary>
 public class NavNode
 {
-    public string Id { get; init; } = string.Empty;
-    public string Label { get; init; } = string.Empty;
-    public string? Icon { get; init; }
-    public bool Pending { get; init; }
+    public string Id { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string? Icon { get; set; }
+    public bool Pending { get; set; }
 
     /// <summary>Texto exibido no card de conteúdo. Nulo quando o nó é uma pasta.</summary>
-    public string? Content { get; init; }
+    public string? Content { get; set; }
 
     /// <summary>Informação de banco/conexão exibida no rodapé. Nulo quando o nó é uma pasta.</summary>
-    public string? Db { get; init; }
+    public string? Db { get; set; }
 
-    public List<NavNode>? Children { get; init; }
+    /// <summary>Quantidade de vezes que a página foi editada e salva.</summary>
+    public int Acessos { get; set; }
 
-    public bool IsFolder => Children is { Count: > 0 };
+    public List<NavNode>? Children { get; set; }
+
+    [JsonIgnore]
+    public bool IsFolder => Children is not null;
+
+    [JsonIgnore]
+    public bool IsPage => Content is not null;
 
     /// <summary>Preenchido em tempo de execução pelo <see cref="DocsRepository"/>.</summary>
+    [JsonIgnore]
     public NavNode? Parent { get; set; }
 
     public bool MatchesQuery(string query)
@@ -29,7 +39,7 @@ public class NavNode
         if (string.IsNullOrWhiteSpace(query)) return true;
         var q = query.Trim();
 
-        if (Label.Contains(q, StringComparison.OrdinalIgnoreCase)) return true;
+        if ((Label ?? string.Empty).Contains(q, StringComparison.OrdinalIgnoreCase)) return true;
         if (Content is not null && Content.Contains(q, StringComparison.OrdinalIgnoreCase)) return true;
         if (Children is not null) return Children.Any(c => c.MatchesQuery(q));
         return false;
@@ -37,13 +47,28 @@ public class NavNode
 
     public string Breadcrumb()
     {
-        var parts = new List<string> { Label };
+        var parts = new List<string> { Label ?? string.Empty };
         var p = Parent;
         while (p is not null)
         {
-            parts.Insert(0, p.Label);
+            parts.Insert(0, p.Label ?? string.Empty);
             p = p.Parent;
         }
         return string.Join(" › ", parts).ToUpperInvariant();
+    }
+
+    public NavNode DeepClone()
+    {
+        return new NavNode
+        {
+            Id = Id,
+            Label = Label,
+            Icon = Icon,
+            Pending = Pending,
+            Content = Content,
+            Db = Db,
+            Acessos = Acessos,
+            Children = Children?.Select(c => c.DeepClone()).ToList()
+        };
     }
 }

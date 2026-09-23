@@ -1,0 +1,323 @@
+[
+  {
+    "id": "topdesk",
+    "label": "Top Desk",
+    "icon": "🎧",
+    "children": [
+      {
+        "id": "acompanhamento",
+        "label": "Acompanhamento",
+        "children": [
+          {
+            "id": "status-chamado",
+            "label": "Status do Chamado",
+            "content": "Ao receber um chamado, é fundamental compreender integralmente a solicitação antes de direcioná-la à equipe. Todo o processo deve ser acompanhado em conjunto com o solicitante, caso necessário.\n\nChamados complexos ou que demandem ações de outros times são devidamente documentados, repassados via JIRA e reportados ao solicitante.",
+            "db": "sem banco interno"
+          }
+        ]
+      },
+      {
+        "id": "encerramento",
+        "label": "Encerramento",
+        "content": "Para efetuar o encerramento de um chamado, todas as informações devem ser alinhadas previamente com o solicitante via Teams ou pelo próprio ticket.\n\nAlém disso, é obrigatório anexar evidências de resolução do problema ou bug (ex: capturas de tela ou confirmação formal de validação do solicitante).",
+        "db": "sem banco interno"
+      },
+      {
+        "id": "aplicacoes-atendidas",
+        "label": "Aplicações Atendidas",
+        "content": "O Top Desk centraliza o suporte a solicitações, reportes de bugs, melhorias e novas funcionalidades para as seguintes aplicações:\n\n• Cacau Digital\n• Cacau Lovers\n• OMS\n• QR Code Generator",
+        "db": "sem banco interno"
+      },
+      {
+        "id": "endpoints-topdesk",
+        "label": "Endpoints",
+        "content": "Atualmente há uma integração do TOPdesk com o Cacau Digital OMS e Portal do Revendedor. Com o Cacau Digital OMS, o TOPdesk lê a API para trazer o cadastro das lojas e seus representantes, para vincularmos aos chamados.",
+        "db": "sem banco interno"
+      }
+    ]
+  },
+  {
+    "id": "cacau-digital",
+    "label": "Cacau Digital",
+    "icon": "📱",
+    "children": [
+      {
+        "id": "site-pedidos",
+        "label": "Site de Pedidos",
+        "children": [
+          {
+            "id": "site-pedidos-oque",
+            "label": "O que é",
+            "content": "Plataforma que permite aos franqueados realizarem pedidos de produtos Cacau Show de maneira ágil, centralizada e eficiente.\n\n(As APIs do site são gerenciadas pelo time de Desenvolvimento e estão hospedadas nos repositórios do GitHub e Azure).\n\nBancos envolvidos: MDM e OMS.",
+            "db": "MDM / OMS"
+          }
+        ]
+      },
+      {
+        "id": "relatorios",
+        "label": "Relatórios",
+        "content": "Os relatórios analíticos do Cacau Digital são mantidos pela equipe de Data & Insights, responsáveis pela análise de vendas e performance corporativa via Power BI.\n\nNota: A API de integração entre o Cacau Digital e o Power BI não é gerenciada pela equipe Dev.",
+        "db": "Power BI / Databricks"
+      },
+      {
+        "id": "extratos",
+        "label": "Extratos",
+        "content": "Módulo responsável pela consulta de extratos no portal Cacau Digital, mantido pela equipe de Desenvolvimento.\n\nUtiliza a string de conexão ConnectionString_Portal (banco: cacaudigital_web_prd), compartilhada também com o Napp.",
+        "db": "ConnectionString_Portal (cacaudigital_web_prd)"
+      },
+      {
+        "id": "historico-saf",
+        "label": "Histórico do SAF",
+        "content": "Módulo destinado à consulta do histórico de chamados do SAF via banco Sysaid.\n\nNota: Os chamados via SAF foram oficialmente descontinuados em outubro de 2025.",
+        "db": "Sysaid"
+      },
+      {
+        "id": "gerenciador-acessos",
+        "label": "Gerenciador de Acessos",
+        "content": "Ferramenta para gestão de vínculos entre usuários e unidades de negócios.\n\nAo pesquisar pelo código SAP da loja, são exibidos todos os logins associados. Da mesma forma, ao buscar pelo e-mail do usuário, retornam-se todas as lojas vinculadas ao respectivo cadastro.",
+        "db": "ConnectionString_Portal (cacaudigital_web_prd)"
+      },
+      {
+        "id": "acesso-portal",
+        "label": "Acesso ao Portal",
+        "content": "O controle de permissões e a liberação de acessos ao portal Cacau Digital são realizados diretamente pela equipe de Suporte.",
+        "db": "Não Possui"
+      },
+      {
+        "id": "aceite-contrato",
+        "label": "Aceite de Contrato",
+        "content": "Aba destinada à consulta e assinatura digital de termos e contratos vigentes por parte dos franqueados, visando otimizar a organização legal.",
+        "db": "ConnectionString_Portal (cacaudigital_web_prd)"
+      },
+      {
+        "id": "cadastro-loja",
+        "label": "Cadastro de Loja",
+        "content": "Centraliza as informações operacionais da unidade: dados do gerente, contatos de WhatsApp, códigos SAP e RCKY, horários de funcionamento, inventário de equipamentos, status operacional, localização, limites de compra e redes sociais.\n\nOs dados mestres são integrados via SAP e refletidos no MDM; a manutenção das demais informações é de responsabilidade do franqueado.",
+        "db": "MDM (mdm_cacaushow_prd)"
+      },
+      {
+        "id": "inventario-cd",
+        "label": "Inventário",
+        "content": "Funcionalidade responsável pelo controle de estoque e gerenciamento dos produtos disponíveis no portal Cacau Digital.",
+        "db": "Inventario (inventario)"
+      }
+    ]
+  },
+  {
+    "id": "cacau-lovers",
+    "label": "Cacau Lovers",
+    "icon": "❤️",
+    "children": [
+      {
+        "id": "programa-fidelidade",
+        "label": "Programa de Fidelidade",
+        "content": "Plataforma de fidelização que gerencia a distribuição de pontos, concedendo experiências exclusivas e descontos aos clientes.\n\nO ecossistema possui bases de dados estruturadas em ambiente de Produção e Homologação (HML).",
+        "db": "MongoDB"
+      },
+      {
+        "id": "pontuacao",
+        "label": "Cacaus (Pontuação)",
+        "children": [
+          {
+            "id": "como-pontuar",
+            "label": "Como pontuar",
+            "content": "Regra de acúmulo: A cada R$ 20,00 em compras efetuadas, o cliente recebe 1 'CACAU' (ponto).\n\nOs pontos acumulados podem ser trocados por produtos, descontos especiais e benefícios parceiros.",
+            "db": "MongoDB"
+          },
+          {
+            "id": "validade-pontos",
+            "label": "Validade dos pontos",
+            "content": "Os pontos gerados têm validade de 30 dias contados a partir da data da compra. A atualização do extrato no perfil do usuário pode levar até 24 horas.",
+            "db": "MongoDB"
+          }
+        ]
+      },
+      {
+        "id": "resgates",
+        "label": "Resgates",
+        "content": "Seção de trocas de pontos por benefícios (promoções, isenção de frete, descontos na próxima compra, itens da cafeteria em Mega Stores e doações).\n\nRegras Gerais:\n• Todas as recompensas podem sofrer alterações sem aviso prévio.\n• Limite de resgate: até 2 utilizações por CPF.\n• A gestão do catálogo é feita pelo painel Admin do Cacau Lovers.",
+        "db": "MongoDB"
+      },
+      {
+        "id": "front-lovers",
+        "label": "Front",
+        "content": "A interface do usuário (Frontend) é desenvolvida, mantida e testada de forma contínua pelo time de DEV.",
+        "db": "Fidelidade banco"
+      },
+      {
+        "id": "dados-lovers",
+        "label": "Dados",
+        "content": "O Cacau Lovers conta com uma infraestrutura dedicada de Banco de Dados para sustentação da aplicação em Produção e Homologação.",
+        "db": "MongoDB"
+      }
+    ]
+  },
+  {
+    "id": "oms",
+    "label": "OMS",
+    "icon": "📦",
+    "children": [
+      {
+        "id": "integracoes-oms",
+        "label": "Integrações",
+        "content": "Módulo focado na gestão de integrações, microsserviços e rotinas de comunicação ligadas ao ecossistema do OMS.",
+        "db": "oms_cacaushow_prd"
+      },
+      {
+        "id": "banco-oms",
+        "label": "OMS (oms_cacaushow_prd)",
+        "content": "Conexão: OMS\nCatálogo: oms_cacaushow_prd\n\nString de Conexão:\nServer=*************=oms_cacaushow_prd;User ID=APIOMS;Password=***********;Max Pool Size=1000\n\nDirecionamento: Banco de dados de Produção do OMS.",
+        "db": "Server=*************=oms_cacaushow_prd;User ID=APIOMS;Password=***********;Max Pool Size=1000"
+      }
+    ]
+  },
+  {
+    "id": "bancos-nao-relacionados",
+    "label": "Bancos Não Relacionados",
+    "icon": "🗄️",
+    "pending": true,
+    "children": [
+      {
+        "id": "master-retail",
+        "label": "Master Retail / Ecossistema Trufa Negra",
+        "icon": "📁",
+        "children": [
+          {
+            "id": "trufanegra",
+            "label": "trufaNegra",
+            "content": "Conexão: trufaNegra\nCatálogos: mr2_cacaushow e vw_trufanegra\n\nDirecionamento: Ecossistema Master Retail.",
+            "db": "trufaNegra (mr2_cacaushow / vw_trufanegra)"
+          },
+          {
+            "id": "trufanegracd",
+            "label": "trufaNegraCD",
+            "content": "Conexão: trufaNegraCD\nCatálogo: cacaudigital_web_prd\n\nDirecionamento: Fronteira de integração entre Master Retail e Cacau Digital.",
+            "db": "trufaNegraCD (cacaudigital_web_prd)"
+          },
+          {
+            "id": "trufanegravd",
+            "label": "trufaNegraVD",
+            "content": "Conexão: trufaNegraVD\nCatálogos: rcky_mr_dtw e mr2_cacaushow\n\nDirecionamento: Ecossistema Master Retail / Vendas Diretas.",
+            "db": "trufaNegraVD (rcky_mr_dtw / mr2_cacaushow)"
+          },
+          {
+            "id": "trufanegrapanettone",
+            "label": "trufaNegraPanettone",
+            "content": "Conexão: trufaNegraPanettone\nCatálogo: mr2_cacaushow\n\nDirecionamento: Ecossistema Master Retail.",
+            "db": "trufaNegraPanettone (mr2_cacaushow)"
+          },
+          {
+            "id": "trufanegraecommerce",
+            "label": "trufaNegraEcommerce",
+            "content": "Conexão: trufaNegraEcommerce\nCatálogo: mr2_cacaushow\n\nDirecionamento: Ecossistema Master Retail / E-commerce.",
+            "db": "trufaNegraEcommerce (mr2_cacaushow)"
+          },
+          {
+            "id": "trufanegramm",
+            "label": "trufaNegraMM",
+            "content": "Conexão: trufaNegraMM\nCatálogo: bematech_stg\n\nDirecionamento: Ecossistema Master Retail / Notas fiscais.",
+            "db": "trufaNegraMM (bematech_stg)"
+          }
+        ]
+      },
+      {
+        "id": "corporativo-dw",
+        "label": "Corporativo & Data Warehouse",
+        "icon": "📁",
+        "children": [
+          {
+            "id": "dw",
+            "label": "DW",
+            "content": "Conexão: DW\nCatálogo: DW_CACAUSHOW\n\nDirecionamento: Data Warehouse central.",
+            "db": "DW (DW_CACAUSHOW)"
+          },
+          {
+            "id": "bicc",
+            "label": "BICC",
+            "content": "Conexão: BICC\nCatálogo: BICC_PRD\n\nDirecionamento: Business Intelligence / Controladoria.",
+            "db": "BICC (BICC_PRD)"
+          },
+          {
+            "id": "protheus",
+            "label": "Protheus",
+            "content": "Conexão: Protheus\nCatálogo: mp12_erp_prd\n\nDirecionamento: ERP Protheus TOTVS.",
+            "db": "Protheus (mp12_erp_prd)"
+          },
+          {
+            "id": "lake",
+            "label": "Lake",
+            "content": "Conexão: Lake\nCatálogo: STM\n\nDirecionamento: Data Lake corporativo.",
+            "db": "Lake (STM)"
+          },
+          {
+            "id": "lakebip",
+            "label": "LakeBIP",
+            "content": "Conexão: LakeBIP\nCatálogo: BIP\n\nDirecionamento: Data Lake BIP.",
+            "db": "LakeBIP (BIP)"
+          },
+          {
+            "id": "mrd",
+            "label": "MRD",
+            "content": "Conexão: MRD\nCatálogo: MR2_CACAUSHOW\n\nDirecionamento: A definir.",
+            "db": "MRD (MR2_CACAUSHOW)"
+          }
+        ]
+      },
+      {
+        "id": "outros-classificar",
+        "label": "Outros / A Classificar",
+        "icon": "📁",
+        "children": [
+          {
+            "id": "cde",
+            "label": "CDE",
+            "content": "Conexão: CDE\nCatálogo: web_consultoria\n\nStatus: Pendente de direcionamento.",
+            "db": "CDE (web_consultoria)"
+          },
+          {
+            "id": "multiloja",
+            "label": "MultiLoja",
+            "content": "Conexão: MultiLoja\nCatálogo: CSDTB-RCKY-DTW\n\nStatus: Pendente de direcionamento.",
+            "db": "MultiLoja (CSDTB-RCKY-DTW)"
+          },
+          {
+            "id": "nps",
+            "label": "NPS",
+            "content": "Conexão: NPS\nCatálogo: nps2_sys_prd\n\nStatus: Sistema de pesquisas (NPS).",
+            "db": "NPS (nps2_sys_prd)"
+          },
+          {
+            "id": "credenciamento",
+            "label": "Credenciamento",
+            "content": "Conexão: Credenciamento\nCatálogo: rcky_mr_dtw\n\nStatus: Pendente de direcionamento.",
+            "db": "Credenciamento (rcky_mr_dtw)"
+          },
+          {
+            "id": "sysaid",
+            "label": "SYSAID",
+            "content": "Conexão: SYSAID\nCatálogo: sysaid_sys_prd\n\nStatus: Gestão de chamados (Sysaid).",
+            "db": "SYSAID (sysaid_sys_prd)"
+          },
+          {
+            "id": "inventario-geral",
+            "label": "Inventario",
+            "content": "Conexão: Inventario\nCatálogo: inventario\n\nStatus: Controle de Estoque/Inventário Cacau Digital.",
+            "db": "Inventario (inventario)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "em-breve",
+    "label": "Em breve",
+    "children": [
+      {
+        "id": "api-pass",
+        "label": "coletando informações",
+        "content": "Informações sobre a API pass.",
+        "db": "Api pass"
+      }
+    ]
+  }
+]

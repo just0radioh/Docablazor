@@ -1,16 +1,19 @@
 @namespace DocaBlazor.Shared
 
 <li style="@(Visible ? "" : "display:none")">
-    <button class="nav-item @(IsSelected ? "active" : "") @(Node.Pending ? "pending-folder" : "")"
+    <button class="nav-item @(IsSelected ? "active" : "") @(Node.Pending ? "pending-folder" : "") @(Node.IsFolder ? "is-folder" : "is-page")"
             role="treeitem"
             aria-expanded="@(Node.IsFolder ? Expanded.ToString().ToLowerInvariant() : null)"
             @onclick="HandleClick">
-        <span class="toggle-icon @(Node.IsFolder ? (Expanded ? "open" : "") : "spacer")">▶</span>
         @if (!string.IsNullOrEmpty(Node.Icon))
         {
-            <span>@Node.Icon</span>
+            <span class="nav-icon">@Node.Icon</span>
         }
         <span class="nav-label">@Label</span>
+        @if (Node.IsFolder)
+        {
+            <span class="toggle-icon @(Expanded ? "open" : "")" aria-hidden="false">›</span>
+        }
     </button>
 
     @if (Node.IsFolder)
@@ -19,11 +22,11 @@
             @foreach (var child in Node.Children!)
             {
                 <TreeItem Node="child"
-                          Query="Query"
-                          SelectedId="SelectedId"
+                          Query="@Query"
+                          SelectedId="@SelectedId"
                           ExpandedIds="ExpandedIds"
                           OnSelect="OnSelect"
-                          OnToggle="OnToggle" />
+                          OnFolderActivate="OnFolderActivate" />
             }
         </ul>
     }
@@ -35,11 +38,10 @@
     [Parameter] public string? SelectedId { get; set; }
     [Parameter, EditorRequired] public HashSet<string> ExpandedIds { get; set; } = new();
     [Parameter] public EventCallback<NavNode> OnSelect { get; set; }
-    [Parameter] public EventCallback<string> OnToggle { get; set; }
+    [Parameter] public EventCallback<NavNode> OnFolderActivate { get; set; }
 
     private bool IsSelected => SelectedId == Node.Id;
 
-    // Expandido manualmente OU forçado pela busca ativa (ramo que contém o termo).
     private bool Expanded => Node.IsFolder &&
         (ExpandedIds.Contains(Node.Id) || (!string.IsNullOrWhiteSpace(Query) && Node.MatchesQuery(Query)));
 
@@ -49,16 +51,17 @@
     {
         get
         {
+            var label = Node.Label ?? string.Empty;
             if (string.IsNullOrWhiteSpace(Query))
-                return new MarkupString(System.Net.WebUtility.HtmlEncode(Node.Label));
+                return new MarkupString(System.Net.WebUtility.HtmlEncode(label));
 
-            var idx = Node.Label.IndexOf(Query, StringComparison.OrdinalIgnoreCase);
-            if (idx < 0)
-                return new MarkupString(System.Net.WebUtility.HtmlEncode(Node.Label));
+            var idx = label.IndexOf(Query, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0 || idx + Query.Length > label.Length)
+                return new MarkupString(System.Net.WebUtility.HtmlEncode(label));
 
-            var before = System.Net.WebUtility.HtmlEncode(Node.Label[..idx]);
-            var match = System.Net.WebUtility.HtmlEncode(Node.Label.Substring(idx, Query.Length));
-            var after = System.Net.WebUtility.HtmlEncode(Node.Label[(idx + Query.Length)..]);
+            var before = System.Net.WebUtility.HtmlEncode(label[..idx]);
+            var match = System.Net.WebUtility.HtmlEncode(label.Substring(idx, Query.Length));
+            var after = System.Net.WebUtility.HtmlEncode(label[(idx + Query.Length)..]);
             return new MarkupString($"{before}<mark>{match}</mark>{after}");
         }
     }
@@ -66,7 +69,7 @@
     private async Task HandleClick()
     {
         if (Node.IsFolder)
-            await OnToggle.InvokeAsync(Node.Id);
+            await OnFolderActivate.InvokeAsync(Node);
         else
             await OnSelect.InvokeAsync(Node);
     }

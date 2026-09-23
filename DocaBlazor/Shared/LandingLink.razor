@@ -1,0 +1,36 @@
+@namespace DocaBlazor.Shared
+
+<li class="@(Node.IsFolder && HasChildren ? "has-nested" : "")">
+    <button type="button" class="docs-link @(Node.Pending ? "pending" : "")" @onclick="() => OnSelect.InvokeAsync(Node)">
+        @if (!string.IsNullOrEmpty(Node.Icon))
+        {
+            <span class="docs-link-icon">@Node.Icon</span>
+        }
+        @Node.Label
+        @if (Node.Pending)
+        {
+            <span class="docs-link-badge">em breve</span>
+        }
+        else if (!string.IsNullOrWhiteSpace(Node.Db) && Node.Db != "Não informado" && Node.Db != "sem banco interno")
+        {
+            <span class="docs-link-db" title="@Node.Db">🗄️</span>
+        }
+    </button>
+
+    @if (Node.IsFolder && HasChildren)
+    {
+        <ul>
+            @foreach (var child in Node.Children!)
+            {
+                <LandingLink Node="child" OnSelect="OnSelect" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired] public NavNode Node { get; set; } = null!;
+    [Parameter] public EventCallback<NavNode> OnSelect { get; set; }
+
+    private bool HasChildren => Node.Children is { Count: > 0 };
+}

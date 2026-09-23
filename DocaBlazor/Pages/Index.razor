@@ -1,17 +1,20 @@
 @page "/"
+@implements IDisposable
 @inject DocsRepository Repo
 @inject IJSRuntime JS
 
-<PageTitle>Doca - Time Dev</PageTitle>
+<PageTitle>Doca - Time Dev (Editável)</PageTitle>
 
 <div class="sidebar-overlay @(SidebarOpen ? "active" : "")" @onclick="CloseSidebar"></div>
 
 <aside class="@(SidebarOpen ? "open" : "")">
     <div class="sidebar-header">
-        <div class="logo-mark">📚</div>
+        <div class="logo-mark">D</div>
         <div class="sidebar-header-text">
-            <h2>Doca - Dev edition</h2>
-            <span>Base de conhecimento interna</span>
+            <button type="button" class="sidebar-brand" @onclick="GoHome">
+                <h2>Doca</h2>
+            </button>
+            <span>Knowledge · Time Dev</span>
         </div>
         <button class="close-sidebar-btn" @onclick="CloseSidebar" aria-label="Fechar menu">✕</button>
     </div>
@@ -21,7 +24,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="10" cy="10" r="7" /><line x1="21" y1="21" x2="15" y2="15" />
             </svg>
-            <input type="text" placeholder="Filtrar tópicos e conteúdo..." autocomplete="off"
+            <input type="text" placeholder="Buscar na documentação..." autocomplete="off"
                    value="@Query" @oninput="OnSearchInput" />
             <button class="search-clear @(string.IsNullOrEmpty(Query) ? "" : "visible")"
                     @onclick="ClearSearch" aria-label="Limpar busca">✕</button>
@@ -29,6 +32,9 @@
     </div>
 
     <nav class="nav-tree" role="tree" aria-label="Navegação da base de conhecimento">
+        <button type="button" class="nav-home @(SelectedNode is null ? "active" : "")" @onclick="GoHome">
+            <span class="nav-home-label">Início</span>
+        </button>
         @if (!string.IsNullOrWhiteSpace(Query) && !AnyVisible)
         {
             <div class="no-results">Nenhum resultado para "@Query"</div>
@@ -36,66 +42,310 @@
         else
         {
             <ul>
-                @foreach (var node in Repo.Tree)
+                @foreach (var node in Tree)
                 {
                     <TreeItem Node="node"
-                              Query="Query"
-                              SelectedId="SelectedNode?.Id"
+                              Query="@Query"
+                              SelectedId="@SelectedNode?.Id"
                               ExpandedIds="ExpandedIds"
                               OnSelect="SelectNode"
-                              OnToggle="ToggleFolder" />
+                              OnFolderActivate="OnFolderActivate" />
                 }
             </ul>
         }
     </nav>
+
+    <div class="sidebar-footer">
+        <button class="action-btn" @onclick="OpenAddRootFolder">📁 Nova Pasta</button>
+        <button class="action-btn" @onclick="OpenAddPage">➕ Nova Página</button>
+        <button class="action-btn danger" @onclick="DeleteSelectedFolder" disabled="@(!CanDeleteFolder)">
+            🗑️ Excluir Pasta
+        </button>
+    </div>
 </aside>
 
 <main>
     <div class="top-bar">
-        <button class="menu-toggle-btn" @onclick="OpenSidebar" aria-label="Abrir menu">☰</button>
-        <span class="breadcrumb-text">@Breadcrumb</span>
-    </div>
-    <div class="content-area">
-        <h1>@Title</h1>
-        <div class="content-card">@Body</div>
-
-        <div class="db-card">
-            <strong>🗄️ Banco de Dados / Conexão:</strong>
-            @if (!string.IsNullOrWhiteSpace(SelectedNode?.Db) && SelectedNode.Db != "Não informado")
-            {
-                <span class="db-badge-wrap">
-                    <span class="db-badge">@SelectedNode.Db</span>
-                    <button class="copy-btn @(Copied ? "copied" : "")" @onclick="() => CopyDb(SelectedNode.Db!)">
-                        @(Copied ? "Copiado ✓" : "Copiar")
-                    </button>
-                </span>
-            }
-            else
-            {
-                <span class="placeholder-text">Não especificado ou Não aplicável</span>
-            }
+        <div class="top-bar-left">
+            <button class="menu-toggle-btn" @onclick="OpenSidebar" aria-label="Abrir menu">☰</button>
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <button type="button" class="breadcrumb-home" @onclick="GoHome" title="Início">⌂</button>
+                @if (SelectedNode is not null)
+                {
+                    <span class="breadcrumb-sep">›</span>
+                    <span class="breadcrumb-text">@Breadcrumb</span>
+                }
+                else
+                {
+                    <span class="breadcrumb-sep">›</span>
+                    <span class="breadcrumb-text">DOCUMENTATION</span>
+                }
+            </nav>
         </div>
+        @if (SelectedNode?.IsPage == true)
+        {
+            <div class="content-actions">
+                <button class="btn-sm" @onclick="OpenEditPage">✏️ Editar Página</button>
+                <button class="btn-sm danger" @onclick="DeleteSelected">🗑️ Excluir</button>
+            </div>
+        }
+        else if (SelectedNode?.IsFolder == true)
+        {
+            <div class="content-actions">
+                <button class="btn-sm" @onclick="OpenAddPage">➕ Nova Página</button>
+                <button class="btn-sm danger" @onclick="DeleteSelectedFolder">🗑️ Excluir Pasta</button>
+            </div>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(PersistWarning))
+    {
+        <div class="persist-warning" role="status">@PersistWarning</div>
+    }
+    <div class="content-area @(ShowLanding ? "landing" : "")">
+        <h1>@Title</h1>
+
+        @if (ShowLanding)
+        {
+            <DocsLanding Sections="LandingSections"
+                         Subtitle="@LandingSubtitle"
+                         OnSelect="SelectNode" />
+        }
+        else
+        {
+            <div class="page-meta">
+                <span class="acessos-badge" title="Edições salvas nesta página">
+                    ✏️ Acessos: <strong>@(SelectedNode?.Acessos ?? 0)</strong>
+                </span>
+            </div>
+
+            <div class="content-card">
+                @Body
+            </div>
+
+            <div class="db-card">
+                <strong>🗄️ Banco de Dados / Conexão:</strong>
+                @if (!string.IsNullOrWhiteSpace(SelectedNode?.Db) && SelectedNode.Db != "Não informado")
+                {
+                    <span class="db-badge-wrap">
+                        <span class="db-badge">@SelectedNode.Db</span>
+                        <button class="copy-btn @(Copied ? "copied" : "")" @onclick="() => CopyDb(SelectedNode.Db!)">
+                            @(Copied ? "Copiado ✓" : "Copiar")
+                        </button>
+                    </span>
+                }
+                else
+                {
+                    <span class="placeholder-text">Não especificado ou Não aplicável</span>
+                }
+            </div>
+        }
     </div>
 </main>
 
+<div class="modal-overlay @(ModalOpen ? "active" : "")" @onclick="CloseModal">
+    <div class="modal" @onclick:stopPropagation="true">
+        <h3>@ModalTitle</h3>
+
+        @if (ModalMode == ModalKind.AddPage)
+        {
+            <div class="form-group">
+                <label>Localização (Pasta)</label>
+                <select @bind="ModalParentId">
+                    @foreach (var folder in FolderOptions)
+                    {
+                        <option value="@folder.Id">@folder.Indent@folder.Label</option>
+                    }
+                </select>
+            </div>
+        }
+
+        <div class="form-group">
+            <label>Título</label>
+            <input type="text" @bind="ModalName" @bind:event="oninput" placeholder="Ex: Relatórios de Vendas" />
+        </div>
+
+        @if (ModalMode is ModalKind.AddPage or ModalKind.EditPage)
+        {
+            <div class="form-group">
+                <label>Conteúdo da Página</label>
+                <textarea @bind="ModalContent" @bind:event="oninput" placeholder="Escreva os detalhes técnicos aqui..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Banco de Dados / String de Conexão</label>
+                <input type="text" @bind="ModalDb" @bind:event="oninput" placeholder="Ex: MongoDB / Server=..." />
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(ModalError))
+        {
+            <div class="form-error">@ModalError</div>
+        }
+
+        <div class="modal-actions">
+            <button class="btn-secondary" @onclick="CloseModal">Cancelar</button>
+            <button class="btn-primary" @onclick="SaveModal">Salvar</button>
+        </div>
+    </div>
+</div>
+
 @code {
+    private enum ModalKind { None, AddRootFolder, AddPage, EditPage }
+
+    private List<NavNode> Tree { get; set; } = new();
     private string Query { get; set; } = string.Empty;
     private NavNode? SelectedNode { get; set; }
     private HashSet<string> ExpandedIds { get; set; } = new();
     private bool SidebarOpen { get; set; }
     private bool Copied { get; set; }
+    private bool Ready { get; set; }
 
-    private string Title => SelectedNode?.Label ?? "Bem-vindo à Doca";
-    private string Breadcrumb => SelectedNode?.Breadcrumb() ?? "Início";
+    private bool ModalOpen { get; set; }
+    private ModalKind ModalMode { get; set; }
+    private string ModalTitle { get; set; } = string.Empty;
+    private string ModalName { get; set; } = string.Empty;
+    private string ModalContent { get; set; } = string.Empty;
+    private string ModalDb { get; set; } = string.Empty;
+    private string ModalParentId { get; set; } = string.Empty;
+    private string ModalError { get; set; } = string.Empty;
+    private string PersistWarning { get; set; } = string.Empty;
+    private bool _userEdited;
+    private CancellationTokenSource? _copyCts;
+
+    private string Title => SelectedNode?.Label ?? "Documentation";
+    private string Breadcrumb => SelectedNode?.Breadcrumb() ?? "DOCUMENTATION";
     private string Body => SelectedNode?.Content
-        ?? "Selecione uma opção no menu lateral para visualizar as especificações técnicas e funcionais da aplicação.";
+        ?? "Selecione uma opção no menu lateral ou crie uma nova aba usando os botões na parte inferior da barra lateral.";
 
-    private bool AnyVisible => Repo.Tree.Any(n => n.MatchesQuery(Query));
+    private bool ShowLanding => SelectedNode is null || SelectedNode.IsFolder;
 
-    private void OnSearchInput(ChangeEventArgs e)
+    private List<NavNode> LandingSections
     {
-        Query = e.Value?.ToString() ?? string.Empty;
+        get
+        {
+            if (SelectedNode is null)
+                return Tree;
+
+            if (!SelectedNode.IsFolder)
+                return new List<NavNode>();
+
+            var children = SelectedNode.Children ?? new List<NavNode>();
+            var folders = children.Where(c => c.IsFolder).ToList();
+            var pages = children.Where(c => c.IsPage).ToList();
+
+            if (folders.Count > 0)
+            {
+                var sections = new List<NavNode>(folders);
+                if (pages.Count > 0)
+                {
+                    sections.Add(new NavNode
+                    {
+                        Id = $"__pages_{SelectedNode.Id}",
+                        Label = "Páginas",
+                        Icon = "📄",
+                        Children = pages
+                    });
+                }
+                return sections;
+            }
+
+            // Pasta só com páginas (ou vazia): uma coluna com o próprio conteúdo
+            return new List<NavNode>
+            {
+                new NavNode
+                {
+                    Id = SelectedNode.Id,
+                    Label = SelectedNode.Label,
+                    Icon = SelectedNode.Icon,
+                    Pending = SelectedNode.Pending,
+                    Children = pages.Count > 0 ? pages : new List<NavNode>()
+                }
+            };
+        }
     }
+
+    private string LandingSubtitle => SelectedNode is null
+        ? "Dark purple dashboard energy — APIs, bancos, produtos e runbooks em blocos. Edite pelo menu."
+        : "Navegue pelos tópicos desta pasta ou abra um documento.";
+
+    private bool AnyVisible => Tree.Any(n => n.MatchesQuery(Query));
+    private bool CanDeleteFolder => SelectedNode?.IsFolder == true;
+
+    private IEnumerable<(string Id, string Label, string Indent)> FolderOptions =>
+        BuildFolderOptions(Tree, 0);
+
+    protected override void OnInitialized()
+    {
+        Tree = Repo.CreateDefaultTree();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || Ready) return;
+        Ready = true;
+
+        try
+        {
+            if (_userEdited)
+            {
+                await PersistAsync();
+                return;
+            }
+
+            var json = await JS.InvokeAsync<string?>("docaInterop.loadTree", DocsRepository.StorageKey);
+            if (_userEdited)
+            {
+                await PersistAsync();
+                return;
+            }
+
+            var loaded = DocsRepository.Deserialize(json);
+            if (loaded is { Count: > 0 })
+            {
+                Tree = loaded;
+                SelectedNode = null;
+            }
+            else
+            {
+                Tree = Repo.CreateDefaultTree();
+                await PersistAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            if (!_userEdited)
+                Tree = Repo.CreateDefaultTree();
+        }
+        finally
+        {
+            try { StateHasChanged(); }
+            catch (InvalidOperationException) { }
+        }
+    }
+
+    public void Dispose()
+    {
+        _copyCts?.Cancel();
+        _copyCts?.Dispose();
+    }
+
+    private static IEnumerable<(string Id, string Label, string Indent)> BuildFolderOptions(
+        IEnumerable<NavNode> nodes, int depth)
+    {
+        foreach (var n in nodes)
+        {
+            if (!n.IsFolder) continue;
+            yield return (n.Id, n.Label, new string('—', depth) + (depth > 0 ? " " : ""));
+            foreach (var child in BuildFolderOptions(n.Children!, depth + 1))
+                yield return child;
+        }
+    }
+
+    private void OnSearchInput(ChangeEventArgs e) =>
+        Query = e.Value?.ToString() ?? string.Empty;
 
     private void ClearSearch() => Query = string.Empty;
 
@@ -105,38 +355,268 @@
             ExpandedIds.Remove(id);
     }
 
-    private void SelectNode(NavNode node)
+    private void SelectNode(NavNode node) => ApplySelection(node, expandFolder: true);
+
+    private void ApplySelection(NavNode node, bool expandFolder)
     {
-        SelectedNode = node;
+        if (node.Id.StartsWith("__pages_", StringComparison.Ordinal))
+            return;
+
+        // Resolve against tree (landing may pass lightweight wrappers)
+        SelectedNode = DocsRepository.FindById(Tree, node.Id) ?? node;
         Copied = false;
 
-        // Expande todos os ancestrais do nó selecionado.
-        var p = node.Parent;
+        var p = SelectedNode.Parent;
         while (p is not null)
         {
             ExpandedIds.Add(p.Id);
             p = p.Parent;
         }
 
+        // Sidebar folder clicks toggle expand state separately — don't force-open here.
+        if (SelectedNode.IsFolder && expandFolder)
+            ExpandedIds.Add(SelectedNode.Id);
+        else if (!SelectedNode.IsFolder)
+            CloseSidebar();
+    }
+
+    private void OnFolderActivate(NavNode node)
+    {
+        ToggleFolder(node.Id);
+        ApplySelection(node, expandFolder: false);
+    }
+
+    private void GoHome()
+    {
+        SelectedNode = null;
+        Copied = false;
         CloseSidebar();
     }
 
     private void OpenSidebar() => SidebarOpen = true;
     private void CloseSidebar() => SidebarOpen = false;
 
+    private void OpenAddRootFolder()
+    {
+        ModalMode = ModalKind.AddRootFolder;
+        ModalTitle = "Criar Nova Pasta Principal";
+        ModalName = string.Empty;
+        ModalError = string.Empty;
+        ModalOpen = true;
+    }
+
+    private void OpenAddPage()
+    {
+        var folders = FolderOptions.ToList();
+        if (folders.Count == 0)
+        {
+            OpenAddRootFolder();
+            ModalError = "Crie uma pasta antes de adicionar páginas.";
+            return;
+        }
+
+        ModalMode = ModalKind.AddPage;
+        ModalTitle = "Criar Nova Página / Aba";
+        ModalName = string.Empty;
+        ModalContent = string.Empty;
+        ModalDb = string.Empty;
+        ModalError = string.Empty;
+
+        // Prefere pasta do item selecionado (ou ancestral pasta).
+        if (SelectedNode?.IsFolder == true)
+            ModalParentId = SelectedNode.Id;
+        else if (SelectedNode?.Parent is not null)
+            ModalParentId = SelectedNode.Parent.Id;
+        else
+            ModalParentId = folders[0].Id;
+
+        ModalOpen = true;
+    }
+
+    private void OpenEditPage()
+    {
+        if (SelectedNode is null || !SelectedNode.IsPage) return;
+
+        ModalMode = ModalKind.EditPage;
+        ModalTitle = "Editar Página";
+        ModalName = SelectedNode.Label;
+        ModalContent = SelectedNode.Content ?? string.Empty;
+        ModalDb = SelectedNode.Db ?? string.Empty;
+        ModalError = string.Empty;
+        ModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        ModalOpen = false;
+        ModalMode = ModalKind.None;
+        ModalError = string.Empty;
+    }
+
+    private async Task SaveModal()
+    {
+        var name = ModalName.Trim();
+        if (string.IsNullOrEmpty(name))
+        {
+            ModalError = "Digite um título válido!";
+            return;
+        }
+
+        if (ModalMode == ModalKind.AddRootFolder)
+        {
+            _userEdited = true;
+            var folder = new NavNode
+            {
+                Id = DocsRepository.UniqueId(name, Tree),
+                Label = name,
+                Icon = "📁",
+                Children = new List<NavNode>()
+            };
+            Tree.Add(folder);
+            DocsRepository.LinkParents(Tree, null);
+            ExpandedIds.Add(folder.Id);
+        }
+        else if (ModalMode == ModalKind.AddPage)
+        {
+            var parent = DocsRepository.FindById(Tree, ModalParentId);
+            if (parent is null || !parent.IsFolder)
+            {
+                ModalError = "Selecione uma pasta válida.";
+                return;
+            }
+
+            _userEdited = true;
+            parent.Children ??= new List<NavNode>();
+            var page = new NavNode
+            {
+                Id = DocsRepository.UniqueId(name, Tree),
+                Label = name,
+                Content = ModalContent,
+                Db = ModalDb,
+                Parent = parent
+            };
+            parent.Children.Add(page);
+            ExpandedIds.Add(parent.Id);
+            SelectedNode = page;
+        }
+        else if (ModalMode == ModalKind.EditPage && SelectedNode is { IsPage: true })
+        {
+            _userEdited = true;
+            var changed = !string.Equals(SelectedNode.Label, name, StringComparison.Ordinal)
+                || !string.Equals(SelectedNode.Content ?? string.Empty, ModalContent, StringComparison.Ordinal)
+                || !string.Equals(SelectedNode.Db ?? string.Empty, ModalDb, StringComparison.Ordinal);
+
+            SelectedNode.Label = name;
+            SelectedNode.Content = ModalContent;
+            SelectedNode.Db = ModalDb;
+
+            if (changed)
+                SelectedNode.Acessos++;
+        }
+        else
+        {
+            return;
+        }
+
+        await PersistAsync();
+        CloseModal();
+    }
+
+    private async Task DeleteSelected()
+    {
+        if (SelectedNode is null || !SelectedNode.IsPage) return;
+
+        var ok = await JS.InvokeAsync<bool>("docaInterop.confirm", "Tem certeza que deseja excluir esta página?");
+        if (!ok) return;
+
+        await RemoveNodeAsync(SelectedNode);
+    }
+
+    private async Task DeleteSelectedFolder()
+    {
+        if (SelectedNode is null || !SelectedNode.IsFolder) return;
+
+        var childCount = CountDescendants(SelectedNode);
+        var msg = childCount > 0
+            ? $"Tem certeza que deseja excluir a pasta \"{SelectedNode.Label}\"?\n\nIsso também removerá {childCount} item(ns) dentro dela."
+            : $"Tem certeza que deseja excluir a pasta \"{SelectedNode.Label}\"?";
+
+        var ok = await JS.InvokeAsync<bool>("docaInterop.confirm", msg);
+        if (!ok) return;
+
+        await RemoveNodeAsync(SelectedNode);
+    }
+
+    private async Task RemoveNodeAsync(NavNode node)
+    {
+        _userEdited = true;
+        ForgetExpanded(node);
+        DocsRepository.RemoveById(Tree, node.Id);
+        DocsRepository.LinkParents(Tree, null);
+        SelectedNode = null;
+        await PersistAsync();
+    }
+
+    private void ForgetExpanded(NavNode node)
+    {
+        ExpandedIds.Remove(node.Id);
+        if (node.Children is null) return;
+        foreach (var child in node.Children)
+            ForgetExpanded(child);
+    }
+
+    private static int CountDescendants(NavNode node)
+    {
+        if (node.Children is null || node.Children.Count == 0) return 0;
+        var total = node.Children.Count;
+        foreach (var child in node.Children)
+            total += CountDescendants(child);
+        return total;
+    }
+
+    private async Task PersistAsync()
+    {
+        try
+        {
+            var json = DocsRepository.Serialize(Tree);
+            var saved = await JS.InvokeAsync<bool>("docaInterop.saveTree", DocsRepository.StorageKey, json);
+            PersistWarning = saved
+                ? string.Empty
+                : "Não foi possível salvar no navegador. O armazenamento pode estar cheio ou bloqueado.";
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        catch (Exception)
+        {
+            PersistWarning = "Não foi possível salvar no navegador.";
+        }
+    }
+
     private async Task CopyDb(string value)
     {
+        _copyCts?.Cancel();
+        _copyCts?.Dispose();
+        _copyCts = new CancellationTokenSource();
+        var token = _copyCts.Token;
+
         try
         {
             await JS.InvokeVoidAsync("docaInterop.copyText", value);
             Copied = true;
             StateHasChanged();
-            await Task.Delay(1500);
+            await Task.Delay(1500, token);
             Copied = false;
-        }
-        finally
-        {
             StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
+        {
+            Copied = false;
+            try { StateHasChanged(); }
+            catch (InvalidOperationException) { }
         }
     }
 }
